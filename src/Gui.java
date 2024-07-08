@@ -1,21 +1,29 @@
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 
+/**
+ * The Gui class represents the main GUI for the Recipe Inventory System.
+ */
 public class Gui extends JFrame {
     private RecipeSystem inventory;
-    private JFrame mainFrame;
     private JTable table;
     private DefaultTableModel model;
+    private JLabel imageLabel; // To display the recipe image
 
+    /**
+     * Constructs the Gui object.
+     * 
+     * @param inventory The RecipeSystem object managing the recipes.
+     */
     public Gui(RecipeSystem inventory) {
         this.inventory = inventory;
-        this.mainFrame = this;
-        mainFrame.setTitle("Recipe Inventory System");
-
-        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.setLayout(new BorderLayout());
+        setTitle("Recipe Inventory System");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
 
         JButton addButton = new JButton("Add Recipe");
         addButton.addActionListener(e -> openAddRecipeFrame());
@@ -26,11 +34,22 @@ public class Gui extends JFrame {
         JButton viewButton = new JButton("View Recipe");
         viewButton.addActionListener(e -> viewSelectedRecipe());
 
+        JButton updateButton = new JButton("Update Recipe");
+        updateButton.addActionListener(e -> updateSelectedRecipe());
+        
+        JButton logoutButton = new JButton("Log Out");
+        logoutButton.setBackground(new Color(255, 102, 102)); // Lighter red color
+        logoutButton.setOpaque(true);
+        logoutButton.addActionListener(e -> logoutAdmin());
+
         JPanel buttonPanel = new JPanel();
+        buttonPanel.setBackground(new Color(118, 146, 36));
         buttonPanel.add(addButton);
         buttonPanel.add(deleteButton);
         buttonPanel.add(viewButton);
-        this.add(buttonPanel, BorderLayout.NORTH);
+        buttonPanel.add(updateButton);
+        buttonPanel.add(logoutButton);
+        add(buttonPanel, BorderLayout.NORTH);
 
         model = new DefaultTableModel();
         model.addColumn("Recipe Name");
@@ -40,203 +59,149 @@ public class Gui extends JFrame {
 
         table = new JTable(model);
         table.setRowHeight(25);
+        table.setDefaultEditor(Object.class, null); // Disable cell editing
+
+        // Add mouse listener to the table to detect row selection
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                int selectedRow = table.getSelectedRow();
+                if (selectedRow != -1) {
+                    String recipeName = (String) model.getValueAt(selectedRow, 0);
+                    byte[] imageBytes = inventory.getRecipeImage(recipeName);
+                    if (imageBytes != null) {
+                        ImageIcon imageIcon = new ImageIcon(imageBytes);
+                        Image img = imageIcon.getImage();
+                        Image scaledImg = img.getScaledInstance(imageLabel.getWidth(), imageLabel.getHeight(), Image.SCALE_SMOOTH);
+                        imageLabel.setIcon(new ImageIcon(scaledImg));
+                    } else {
+                        imageLabel.setIcon(null);
+                    }
+                }
+            }
+        });
+
         JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setBackground(new Color(216, 234, 156));
         scrollPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 50, 10));
         scrollPane.setPreferredSize(new Dimension(500, 250));
-        this.add(scrollPane, BorderLayout.CENTER);
+        add(scrollPane, BorderLayout.CENTER);
 
-        JPanel placeholderPanel = new JPanel();
-        placeholderPanel.setBackground(Color.lightGray);
-        placeholderPanel.setPreferredSize(new Dimension(150, 200));
-        this.add(placeholderPanel, BorderLayout.EAST);
+        // Panel for displaying the image
+        JPanel imagePanel = new JPanel();
+        imagePanel.setBackground(Color.lightGray);
+        imagePanel.setPreferredSize(new Dimension(150, 200));
+        imageLabel = new JLabel();
+        imageLabel.setPreferredSize(new Dimension(150, 200)); // Set preferred size for the image label
+        imageLabel.setHorizontalAlignment(JLabel.CENTER);
+        imageLabel.setVerticalAlignment(JLabel.CENTER);
+        imagePanel.add(imageLabel);
+        add(imagePanel, BorderLayout.EAST);
 
-        this.pack();
-        mainFrame.setLocationRelativeTo(null);
-        this.setVisible(true);
+        pack();
+        setLocationRelativeTo(null);
+        setVisible(true);
     }
-    
-    // updates the table after adding another Recipe
-    private void updateTableModel() {
+
+    /**
+     * Logs out the admin and opens the login frame.
+     */
+    private void logoutAdmin() {
+        LogIn login = new LogIn();
+        login.setVisible(true);
+        dispose();
+    }
+
+    /**
+     * Updates the table model with the current recipes from the inventory.
+     */
+    void updateTableModel() {
         ArrayList<RecipeInventory> recipes = inventory.getRecipes();
-        model.setRowCount(0);
+        model.setRowCount(0); // Clear the table model
         for (RecipeInventory recipe : recipes) {
-            model.addRow(new Object[]{recipe.getName(), recipe.getIngredients().toString().replace("[", "").replace("]", "")});
+            model.addRow(new Object[]{recipe.getName(), recipe.getDescription()});
         }
     }
 
+    /**
+     * Deletes the selected recipe from the inventory.
+     */
     private void deleteSelectedRecipe() {
         int selectedRow = table.getSelectedRow();
         if (selectedRow != -1) {
             String recipeName = (String) model.getValueAt(selectedRow, 0);
             inventory.deleteRecipe(recipeName);
             updateTableModel();
-            JOptionPane.showMessageDialog(mainFrame, "Recipe deleted successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Recipe deleted successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
         } else {
-            JOptionPane.showMessageDialog(mainFrame, "Please select a recipe to delete.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Please select a recipe to delete.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
+    /**
+     * Views the selected recipe details in a new frame.
+     */
     private void viewSelectedRecipe() {
         int selectedRow = table.getSelectedRow();
         if (selectedRow != -1) {
             String recipeName = (String) model.getValueAt(selectedRow, 0);
             RecipeInventory recipe = inventory.getRecipeByName(recipeName);
             if (recipe != null) {
-                new ViewRecipe(mainFrame, recipe);
+                new ViewRecipe(this, recipe);
+                // Display the image if available
+                byte[] imageBytes = inventory.getRecipeImage(recipeName);
+                if (imageBytes != null) {
+                    ImageIcon imageIcon = new ImageIcon(imageBytes);
+                    Image img = imageIcon.getImage();
+                    Image scaledImg = img.getScaledInstance(imageLabel.getWidth(), imageLabel.getHeight(), Image.SCALE_SMOOTH);
+                    imageLabel.setIcon(new ImageIcon(scaledImg));
+                } else {
+                    imageLabel.setIcon(null);
+                }
             } else {
-                JOptionPane.showMessageDialog(mainFrame, "Recipe not found.", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Recipe not found.", "Error", JOptionPane.ERROR_MESSAGE);
             }
         } else {
-            JOptionPane.showMessageDialog(mainFrame, "Please select a recipe to view.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Please select a recipe to view.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void openAddRecipeFrame() {
-        mainFrame.setVisible(false);
+    /**
+     * Updates the selected recipe details in a new frame.
+     */
+    private void updateSelectedRecipe() {
+        int selectedRow = table.getSelectedRow();
+        if (selectedRow != -1) {
+            String recipeName = (String) model.getValueAt(selectedRow, 0);
+            RecipeInventory recipe = inventory.getRecipeByName(recipeName);
+            if (recipe != null) {
+                UpdateFrame updateFrame = new UpdateFrame(recipe, inventory);
+                updateFrame.setVisible(true);
 
-        JFrame addFrame = new JFrame("Recipe Inventory System");
-        addFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        addFrame.setLayout(new GridBagLayout());
+                // Hide the main GUI
+                setVisible(false);
 
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-
-        JTextField recipeNameTextbox = new JTextField();
-        recipeNameTextbox.setPreferredSize(new Dimension(250, 30));
-
-        JTextField ingredientTextbox = new JTextField();
-        ingredientTextbox.setPreferredSize(new Dimension(250, 30));
-
-        JTextArea descriptionTextbox = new JTextArea(3, 20);
-        descriptionTextbox.setLineWrap(true);
-        descriptionTextbox.setWrapStyleWord(true);
-        JScrollPane descriptionScrollPane = new JScrollPane(descriptionTextbox);
-        descriptionScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-
-        JTextArea procedureTextbox = new JTextArea(3, 20);
-        procedureTextbox.setLineWrap(true);
-        procedureTextbox.setWrapStyleWord(true);
-        JScrollPane procedureScrollPane = new JScrollPane(procedureTextbox);
-        procedureScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-
-        JButton submitIngredientButton = new JButton("Add Ingredient");
-        JButton finishButton = new JButton("Finish Recipe");
-        JButton backButton = new JButton("Back");
-
-        DefaultListModel<String> ingredientListModel = new DefaultListModel<>();
-        JList<String> ingredientList = new JList<>(ingredientListModel);
-        ingredientList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        JScrollPane ingredientScrollPane = new JScrollPane(ingredientList);
-        ingredientScrollPane.setPreferredSize(new Dimension(250, 150));
-
-        ArrayList<String> ingredients = new ArrayList<>();
-
-        submitIngredientButton.addActionListener(e -> {
-            String ingredient = ingredientTextbox.getText();
-            if (ingredient != null && !ingredient.isEmpty()) {
-                ingredients.add(ingredient);
-                ingredientListModel.addElement(ingredient);
-                ingredientTextbox.setText("");
-            }
-        });
-
-        JButton deleteButton = new JButton("Delete Ingredient");
-        deleteButton.addActionListener(e -> {
-            int selectedIndex = ingredientList.getSelectedIndex();
-            if (selectedIndex != -1) {
-                ingredients.remove(selectedIndex);
-                ingredientListModel.remove(selectedIndex);
-            }
-        });
-
-        finishButton.addActionListener(e -> {
-            String recipeName = recipeNameTextbox.getText();
-            String description = descriptionTextbox.getText();
-            String procedure = procedureTextbox.getText();
-            if (recipeName != null && !recipeName.isEmpty()) {
-                inventory.addRecipe(recipeName, ingredients, description, procedure);
-                ingredients.clear();
-                ingredientListModel.clear();
-                recipeNameTextbox.setText("");
-                descriptionTextbox.setText("");
-                procedureTextbox.setText("");
-                JOptionPane.showMessageDialog(addFrame, "Recipe added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-                updateTableModel(); // Update the table model after adding a recipe
+                // Add a window listener to reopen the main GUI when the UpdateFrame is closed
+                updateFrame.addWindowListener(new java.awt.event.WindowAdapter() {
+                    @Override
+                    public void windowClosed(java.awt.event.WindowEvent windowEvent) {
+                        setVisible(true);
+                        updateTableModel(); // Refresh the table model
+                    }
+                });
             } else {
-                JOptionPane.showMessageDialog(addFrame, "Please enter a recipe name.", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Recipe not found.", "Error", JOptionPane.ERROR_MESSAGE);
             }
-        });
-
-        backButton.addActionListener(e -> {
-            addFrame.dispose();
-            mainFrame.setVisible(true);
-        });
-
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        addFrame.add(new JLabel("Enter recipe name:"), gbc);
-
-        gbc.gridx = 1;
-        gbc.gridy = 0;
-        addFrame.add(recipeNameTextbox, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        addFrame.add(new JLabel("Enter ingredient:"), gbc);
-
-        gbc.gridx = 1;
-        gbc.gridy = 1;
-        addFrame.add(ingredientTextbox, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        addFrame.add(new JLabel("Enter description:"), gbc);
-
-        gbc.gridx = 1;
-        gbc.gridy = 2;
-        addFrame.add(descriptionScrollPane, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy = 3;
-        addFrame.add(new JLabel("Enter procedure:"), gbc);
-
-        gbc.gridx = 1;
-        gbc.gridy = 3;
-        addFrame.add(procedureScrollPane, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy = 4;
-        gbc.gridwidth = 2;
-        addFrame.add(submitIngredientButton, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy = 5;
-        gbc.gridwidth = 1;
-        addFrame.add(finishButton, gbc);
-
-        gbc.gridx = 1;
-        gbc.gridy = 5;
-        addFrame.add(deleteButton, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy = 6;
-        gbc.gridwidth = 2;
-        addFrame.add(backButton, gbc);
-
-        gbc.gridx = 2;
-        gbc.gridy = 0;
-        gbc.gridheight = 7;
-        gbc.fill = GridBagConstraints.BOTH;
-        addFrame.add(ingredientScrollPane, gbc);
-
-        addFrame.pack();
-        addFrame.setLocationRelativeTo(null);
-        addFrame.setVisible(true);
+        } else {
+            JOptionPane.showMessageDialog(this, "Please select a recipe to update.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
-    public static void main(String[] args) {
-        RecipeSystem inventory = new RecipeSystem();
-        new Gui(inventory);
+    /**
+     * Opens a new frame to add a recipe.
+     */
+    private void openAddRecipeFrame() {
+        new AddRecipeFrame(this, inventory);
+        dispose();
     }
 }

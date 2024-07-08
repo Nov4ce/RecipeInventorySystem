@@ -6,7 +6,6 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.JTextField;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-
 import java.awt.Font;
 import javax.swing.JButton;
 import javax.swing.SwingConstants;
@@ -16,19 +15,23 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.Color;
 import java.sql.*;
-import javax.swing.JList;
 import javax.swing.ImageIcon;
 
+/**
+ * The LogIn class represents the login frame for the Recipe Inventory System.
+ */
 public class LogIn extends JFrame {
 
     private static final long serialVersionUID = 1L;
     private JPanel contentPane;
     private JTextField usernameField;
-    private JPasswordField passwordField; // Changed to JPasswordField
+    private JPasswordField passwordField;
     static LogIn frame1 = new LogIn();
 
     /**
      * Launch the application.
+     *
+     * @param args the command line arguments
      */
     public static void main(String[] args) {
         EventQueue.invokeLater(new Runnable() {
@@ -43,15 +46,14 @@ public class LogIn extends JFrame {
     }
 
     /**
-     * Create the frame.
+     * Create the login frame.
      */
     public LogIn() {
-    	setTitle("Recipe Inventory System");
+        setTitle("Recipe Inventory System");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setBounds(100, 100, 746, 518);
         contentPane = new JPanel();
         contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
-
         setContentPane(contentPane);
         contentPane.setLayout(null);
 
@@ -82,80 +84,96 @@ public class LogIn extends JFrame {
         lblNewLabel.setBounds(289, 10, 469, 338);
         panel_1.add(lblNewLabel);
         
-                JLabel usernameLabel = new JLabel("Username");
-                usernameLabel.setBounds(10, 66, 117, 25);
-                panel_1.add(usernameLabel);
-                usernameLabel.setFont(new Font("Tahoma", Font.PLAIN, 20));
+        JLabel usernameLabel = new JLabel("Username");
+        usernameLabel.setBounds(10, 66, 117, 25);
+        panel_1.add(usernameLabel);
+        usernameLabel.setFont(new Font("Tahoma", Font.PLAIN, 20));
                 
-                        usernameField = new JTextField();
-                        usernameField.setBounds(123, 66, 171, 28);
-                        panel_1.add(usernameField);
-                        usernameField.setFont(new Font("Tahoma", Font.PLAIN, 16));
-                        usernameField.setColumns(10);
+        usernameField = new JTextField();
+        usernameField.setBounds(123, 66, 171, 28);
+        panel_1.add(usernameField);
+        usernameField.setFont(new Font("Tahoma", Font.PLAIN, 16));
+        usernameField.setColumns(10);
                         
-                                JLabel passwordLabel = new JLabel("Password");
-                                passwordLabel.setBounds(10, 117, 96, 28);
-                                panel_1.add(passwordLabel);
-                                passwordLabel.setFont(new Font("Tahoma", Font.PLAIN, 20));
+        JLabel passwordLabel = new JLabel("Password");
+        passwordLabel.setBounds(10, 117, 96, 28);
+        panel_1.add(passwordLabel);
+        passwordLabel.setFont(new Font("Tahoma", Font.PLAIN, 20));
                                 
-                                        passwordField = new JPasswordField(); // Use JPasswordField for password input
-                                        passwordField.setBounds(123, 117, 171, 28);
-                                        panel_1.add(passwordField);
-                                        passwordField.setFont(new Font("Tahoma", Font.PLAIN, 16));
-                                        
-                                                JButton logIn = new JButton("Log In");
-                                                logIn.setBounds(124, 181, 155, 28);
-                                                panel_1.add(logIn);
-                                                logIn.setForeground(new Color(255, 255, 255));
-                                                logIn.setBackground(new Color(118, 146, 36));
-                                                logIn.addActionListener(new ActionListener() {
-                                                    public void actionPerformed(ActionEvent e) {
-                                                        String username = usernameField.getText();
-                                                        String password = new String(passwordField.getPassword()); // Get password from JPasswordField
+        passwordField = new JPasswordField();
+        passwordField.setBounds(123, 117, 171, 28);
+        panel_1.add(passwordField);
+        passwordField.setFont(new Font("Tahoma", Font.PLAIN, 16));
 
-                                                        // Perform login validation
-                                                        if (validateLogin(username, password)) {
-                                                            RecipeSystem inventory = new RecipeSystem();
-                                                            Gui frame = new Gui(inventory);
-                                                            frame.setVisible(true);
-                                                            frame1.setVisible(false);
-                                                        } else {
-                                                            // Handle invalid login
-                                                            JOptionPane.showMessageDialog(null, "Invalid username or password", "Error", JOptionPane.ERROR_MESSAGE);
-                                                        }
-                                                    }
-                                                });
+        JButton logIn = new JButton("Log In");
+        logIn.setBounds(124, 181, 155, 28);
+        panel_1.add(logIn);
+        logIn.setForeground(new Color(255, 255, 255));
+        logIn.setBackground(new Color(118, 146, 36));
+        logIn.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                String username = usernameField.getText();
+                String password = new String(passwordField.getPassword());
+
+                // Perform login validation
+                if (validateLogin(username, password)) {
+                    RecipeSystem inventory = new RecipeSystem();
+                    Gui frame = new Gui(inventory);
+                    frame.setVisible(true);
+                    frame1.setVisible(false);
+                    dispose();
+                } else {
+                    // Handle invalid login
+                    JOptionPane.showMessageDialog(null, "Invalid username or password", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
                                                 
-                                                        logIn.setFont(new Font("Tahoma", Font.PLAIN, 16));
-                                                        
-                                                                JLabel signUp = new JLabel("Don't Have Account? Sign Up");
-                                                                signUp.setBounds(81, 232, 221, 28);
-                                                                panel_1.add(signUp);
-                                                                signUp.addMouseListener(new MouseAdapter() {
-                                                                    @Override
-                                                                    public void mouseClicked(MouseEvent e) {
-                                                                        SignUp signUpForm = new SignUp();
-                                                                        signUpForm.setVisible(true);
-                                                                        frame1.setVisible(false);
-                                                                    }
-                                                                    @Override
-                                                                    public void mouseEntered(MouseEvent e) {
-                                                                    	signUp.setForeground(Color.ORANGE); // Change to red on hover
-                                                                    }
+        logIn.setFont(new Font("Tahoma", Font.PLAIN, 16));
 
-                                                                    @Override
-                                                                    public void mouseExited(MouseEvent e) {
-                                                                    	Color originalColor = null;
-				signUp.setForeground(originalColor); // Change back to original color
-                                                                    }
-                                                                });
+        // Add action listener to trigger log in when Enter key is pressed
+        ActionListener enterKeyListener = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                logIn.doClick();
+            }
+        };
+        usernameField.addActionListener(enterKeyListener);
+        passwordField.addActionListener(enterKeyListener);
                                                                 
-                                                                        signUp.setHorizontalAlignment(SwingConstants.CENTER);
-                                                                        signUp.setFont(new Font("Tahoma", Font.PLAIN, 16));
+        JLabel signUp = new JLabel("Don't Have Account? Sign Up");
+        signUp.setBounds(81, 232, 221, 28);
+        panel_1.add(signUp);
+        signUp.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                SignUp signUpForm = new SignUp();
+                signUpForm.setVisible(true);
+                dispose();
+            }
+            
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                signUp.setForeground(Color.ORANGE); // Change to red on hover
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                Color originalColor = null;
+                signUp.setForeground(originalColor); // Change back to original color
+            }
+        });
+                                                                
+        signUp.setHorizontalAlignment(SwingConstants.CENTER);
+        signUp.setFont(new Font("Tahoma", Font.PLAIN, 16));
     }
 
     /**
      * Validate the login credentials against the database.
+     *
+     * @param username the username entered by the user
+     * @param password the password entered by the user
+     * @return true if the login credentials are valid, false otherwise
      */
     private boolean validateLogin(String username, String password) {
         try (Connection conn = DatabaseManager.getConnection()) {

@@ -6,46 +6,35 @@ import java.awt.event.ActionListener;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import javax.swing.JOptionPane;
+import java.util.regex.Pattern;
 
+/**
+ * The SignUp class provides the user interface for registering a new user
+ * in the Recipe Inventory System.
+ */
 public class SignUp extends JFrame {
 
     private static final long serialVersionUID = 1L;
     private JPanel contentPane;
     private JTextField firstNameField;
     private JTextField lastNameField;
-    private JTextField textField_2;
     private JTextField emailField;
     private JTextField phoneField;
     private JLabel genderLabel;
     private JComboBox<String> genderComboBox;
     private JCheckBox termsCondition;
     private JPasswordField passwordField;
-    private JTextField usernameField; // Add this field
-    private JLabel lblNewLabel_2;
-    private JLabel lblNewLabel_3;
+    private JPasswordField confirmPasswordField;
+    private JTextField usernameField;
+    private JLabel RegistrationLabel;
+    private JLabel designLabel;
+    private JButton btnBack;
 
     /**
-     * Launch the application.
-     */
-    public static void main(String[] args) {
-        EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                try {
-                    SignUp frame = new SignUp();
-                    frame.setVisible(true);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-    }
-
-    /**
-     * Create the frame.
+     * Constructs the SignUp frame.
      */
     public SignUp() {
-    	setTitle("Recipe Inventory System");
+        setTitle("Recipe Inventory System");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setBounds(100, 100, 632, 490);
         contentPane = new JPanel();
@@ -53,22 +42,23 @@ public class SignUp extends JFrame {
         setContentPane(contentPane);
         contentPane.setLayout(null);
 
-        JPanel panel_1 = new JPanel();
-        panel_1.setBackground(new Color(216, 234, 156));
-        panel_1.setBounds(0, 0, 608, 452);
-        contentPane.add(panel_1);
-        panel_1.setLayout(null);
+        JPanel backgroundPanel = new JPanel();
+        backgroundPanel.setBackground(new Color(216, 234, 156));
+        backgroundPanel.setBounds(0, 0, 608, 452);
+        contentPane.add(backgroundPanel);
+        backgroundPanel.setLayout(null);
 
-        JButton signUpButton = 	new JButton("Sign Up");
-        signUpButton.setBounds(29, 377, 353, 40);
-        panel_1.add(signUpButton);
+        JButton signUpButton = new JButton("Sign Up");
+        signUpButton.setBounds(29, 402, 353, 40);
+        backgroundPanel.add(signUpButton);
         signUpButton.setFont(new Font("Tahoma", Font.PLAIN, 16));
         signUpButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                if (validateFields()) {
+                String validationMessage = validateFields();
+                if (validationMessage.isEmpty()) {
                     insertDataIntoDatabase();
                 } else {
-                    JOptionPane.showMessageDialog(null, "Please fill out all fields.", "Incomplete Form", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(null, validationMessage, "Validation Error", JOptionPane.WARNING_MESSAGE);
                 }
             }
         });
@@ -76,113 +66,136 @@ public class SignUp extends JFrame {
         phoneField = new JTextField();
         phoneField.setFont(new Font("Tahoma", Font.PLAIN, 16));
         phoneField.setBounds(222, 185, 160, 30);
-        panel_1.add(phoneField);
+        backgroundPanel.add(phoneField);
         phoneField.setColumns(10);
 
         emailField = new JTextField();
         emailField.setFont(new Font("Tahoma", Font.PLAIN, 16));
         emailField.setBounds(29, 185, 160, 30);
-        panel_1.add(emailField);
+        backgroundPanel.add(emailField);
         emailField.setColumns(10);
 
         firstNameField = new JTextField();
         firstNameField.setFont(new Font("Tahoma", Font.PLAIN, 16));
         firstNameField.setBounds(29, 114, 160, 30);
-        panel_1.add(firstNameField);
+        backgroundPanel.add(firstNameField);
         firstNameField.setColumns(10);
 
         lastNameField = new JTextField();
         lastNameField.setFont(new Font("Tahoma", Font.PLAIN, 16));
         lastNameField.setBounds(222, 114, 160, 30);
-        panel_1.add(lastNameField);
+        backgroundPanel.add(lastNameField);
         lastNameField.setColumns(10);
 
         JLabel phoneLabel = new JLabel("Phone Number");
         phoneLabel.setBounds(222, 154, 127, 21);
-        panel_1.add(phoneLabel);
+        backgroundPanel.add(phoneLabel);
         phoneLabel.setHorizontalAlignment(SwingConstants.CENTER);
         phoneLabel.setFont(new Font("Tahoma", Font.PLAIN, 18));
 
         JLabel lnameLabel = new JLabel("Last Name");
         lnameLabel.setBounds(222, 83, 97, 21);
-        panel_1.add(lnameLabel);
+        backgroundPanel.add(lnameLabel);
         lnameLabel.setHorizontalAlignment(SwingConstants.CENTER);
         lnameLabel.setFont(new Font("Tahoma", Font.PLAIN, 18));
 
         JLabel firstNameLabel = new JLabel("First Name");
         firstNameLabel.setBounds(29, 83, 86, 21);
-        panel_1.add(firstNameLabel);
+        backgroundPanel.add(firstNameLabel);
         firstNameLabel.setHorizontalAlignment(SwingConstants.CENTER);
         firstNameLabel.setFont(new Font("Tahoma", Font.PLAIN, 18));
 
         JLabel emailLabel = new JLabel("Email Address");
         emailLabel.setBounds(29, 154, 113, 21);
-        panel_1.add(emailLabel);
+        backgroundPanel.add(emailLabel);
         emailLabel.setHorizontalAlignment(SwingConstants.CENTER);
         emailLabel.setFont(new Font("Tahoma", Font.PLAIN, 18));
 
         JLabel usernameLabel = new JLabel("Username");
         usernameLabel.setBounds(29, 225, 86, 21);
-        panel_1.add(usernameLabel);
+        backgroundPanel.add(usernameLabel);
         usernameLabel.setHorizontalAlignment(SwingConstants.CENTER);
         usernameLabel.setFont(new Font("Tahoma", Font.PLAIN, 18));
 
         usernameField = new JTextField();
         usernameField.setFont(new Font("Tahoma", Font.PLAIN, 16));
         usernameField.setBounds(29, 256, 160, 30);
-        panel_1.add(usernameField);
+        backgroundPanel.add(usernameField);
         usernameField.setColumns(10);
 
         genderLabel = new JLabel("Gender");
         genderLabel.setBounds(222, 225, 66, 21);
-        panel_1.add(genderLabel);
+        backgroundPanel.add(genderLabel);
         genderLabel.setHorizontalAlignment(SwingConstants.CENTER);
         genderLabel.setFont(new Font("Tahoma", Font.PLAIN, 18));
 
         JLabel passwordLabel = new JLabel("Password");
         passwordLabel.setBounds(29, 292, 86, 21);
-        panel_1.add(passwordLabel);
+        backgroundPanel.add(passwordLabel);
         passwordLabel.setHorizontalAlignment(SwingConstants.CENTER);
         passwordLabel.setFont(new Font("Tahoma", Font.PLAIN, 18));
 
         passwordField = new JPasswordField();
         passwordField.setFont(new Font("Tahoma", Font.PLAIN, 16));
         passwordField.setBounds(29, 323, 160, 30);
-        panel_1.add(passwordField);
+        backgroundPanel.add(passwordField);
+
+        JLabel confirmPasswordLabel = new JLabel("Confirm Password");
+        confirmPasswordLabel.setBounds(222, 292, 160, 21);
+        backgroundPanel.add(confirmPasswordLabel);
+        confirmPasswordLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        confirmPasswordLabel.setFont(new Font("Tahoma", Font.PLAIN, 18));
+
+        confirmPasswordField = new JPasswordField();
+        confirmPasswordField.setFont(new Font("Tahoma", Font.PLAIN, 16));
+        confirmPasswordField.setBounds(222, 323, 160, 30);
+        backgroundPanel.add(confirmPasswordField);
 
         termsCondition = new JCheckBox("<html>By selecting Sign Up Account, you read and agree to our <br>Terms and Conditions</html>");
         termsCondition.setFont(new Font("Tahoma", Font.PLAIN, 9));
-        termsCondition.setBounds(222, 295, 146, 58);
-        panel_1.add(termsCondition);
+        termsCondition.setBounds(29, 360, 176, 40);
+        backgroundPanel.add(termsCondition);
         termsCondition.setBackground(new Color(216, 234, 156));
         termsCondition.setVerticalAlignment(SwingConstants.TOP);
 
         genderComboBox = new JComboBox<>(new String[]{"None", "Prefer not to say", "Male", "Female"});
         genderComboBox.setBounds(222, 256, 160, 30);
-        panel_1.add(genderComboBox);
+        backgroundPanel.add(genderComboBox);
         genderComboBox.setFont(new Font("Tahoma", Font.PLAIN, 16));
-        
-        lblNewLabel_2 = new JLabel("Registration");
-        lblNewLabel_2.setFont(new Font("Tahoma", Font.BOLD, 30));
-        lblNewLabel_2.setBounds(10, 10, 265, 40);
-        panel_1.add(lblNewLabel_2);
-        
-        lblNewLabel_3 = new JLabel("New label");
-        lblNewLabel_3.setIcon(new ImageIcon(SignUp.class.getResource("/images/foood.png")));
-        lblNewLabel_3.setBounds(141, -22, 467, 495);
-        panel_1.add(lblNewLabel_3);
 
+        RegistrationLabel = new JLabel("Registration");
+        RegistrationLabel.setFont(new Font("Tahoma", Font.BOLD, 30));
+        RegistrationLabel.setBounds(10, 10, 265, 40);
+        backgroundPanel.add(RegistrationLabel);
+
+        designLabel = new JLabel("New label");
+        designLabel.setIcon(new ImageIcon(SignUp.class.getResource("/images/foood.png")));
+        designLabel.setBounds(152, -29, 467, 495);
+        backgroundPanel.add(designLabel);
+        
+        btnBack = new JButton("Back");
+        btnBack.setBounds(513, 10, 85, 21);
+        backgroundPanel.add(btnBack);
+
+        btnBack.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                LogIn frame = new LogIn();
+                frame.setVisible(true);
+                dispose(); 
+            }
+        });
     }
 
-    // Method to insert data into database
+    /**
+     * Inserts the data entered by the user into the database.
+     */
     private void insertDataIntoDatabase() {
         String firstName = firstNameField.getText();
         String lastName = lastNameField.getText();
         String emailAddress = emailField.getText();
-        String username = usernameField.getText(); // Get username from usernameField
-        // Get password as char array from JPasswordField
+        String username = usernameField.getText();
         char[] passwordChars = passwordField.getPassword();
-        String password = new String(passwordChars); // Convert char array to String
+        String password = new String(passwordChars);
         String phoneNumber = phoneField.getText();
         String gender = genderComboBox.getSelectedItem().toString();
 
@@ -193,7 +206,7 @@ public class SignUp extends JFrame {
             conn.setAutoCommit(false);
 
             String sql = "INSERT INTO login (username, password, lname, fname, emailaddress, contactNo, Gender) " +
-                         "VALUES (?, ?, ?, ?, ?, ?, ?)";
+                    "VALUES (?, ?, ?, ?, ?, ?, ?)";
             stmt = conn.prepareStatement(sql);
             stmt.setString(1, username);
             stmt.setString(2, password);
@@ -206,14 +219,16 @@ public class SignUp extends JFrame {
             int rowsInserted = stmt.executeUpdate();
             if (rowsInserted > 0) {
                 JOptionPane.showMessageDialog(null, "User registration successful!", "Success", JOptionPane.INFORMATION_MESSAGE);
-                // Optionally, update UI or perform other actions upon success
+                LogIn frame = new LogIn();
+                frame.setVisible(true);
+                dispose();
             }
 
             conn.commit();
         } catch (SQLException ex) {
             try {
                 if (conn != null) {
-                    conn.rollback(); // Rollback in case of exception
+                    conn.rollback();
                 }
             } catch (SQLException rollbackEx) {
                 rollbackEx.printStackTrace();
@@ -225,7 +240,7 @@ public class SignUp extends JFrame {
                     stmt.close();
                 }
                 if (conn != null) {
-                    conn.setAutoCommit(true); // Restore auto-commit behavior
+                    conn.setAutoCommit(true);
                     conn.close();
                 }
             } catch (SQLException closeEx) {
@@ -234,17 +249,48 @@ public class SignUp extends JFrame {
         }
     }
 
-    // Method to validate all fields are filled
-    private boolean validateFields() {
+    /**
+     * Validates all input fields and checks that passwords match.
+     * 
+     * @return A validation message if any field is invalid, otherwise an empty string.
+     */
+    private String validateFields() {
         if (firstNameField.getText().isEmpty() ||
-            lastNameField.getText().isEmpty() ||
-            usernameField.getText().isEmpty() ||
-            passwordField.getPassword().length == 0 ||
-            emailField.getText().isEmpty() ||
-            phoneField.getText().isEmpty() ||
-            genderComboBox.getSelectedItem().toString().equals("None")) {
-            return false;
+                lastNameField.getText().isEmpty() ||
+                usernameField.getText().isEmpty() ||
+                passwordField.getPassword().length == 0 ||
+                confirmPasswordField.getPassword().length == 0 ||
+                emailField.getText().isEmpty() ||
+                phoneField.getText().isEmpty() ||
+                genderComboBox.getSelectedItem().toString().equals("None") ||
+                !termsCondition.isSelected()) {
+            return "Please fill out all required fields and accept the terms and conditions.";
         }
-        return true;
+        // Check if password and confirm password match
+        if (!new String(passwordField.getPassword()).equals(new String(confirmPasswordField.getPassword()))) {
+            return "Password and Confirm Password do not match.";
+        }
+        // Validate email format
+        String emailRegex = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$";
+        if (!Pattern.matches(emailRegex, emailField.getText())) {
+            return "Please enter a valid email address.";
+        }
+        return "";
+    }
+
+    /**
+     * The main method to launch the application.
+     * 
+     * @param args Command-line arguments.
+     */
+    public static void main(String[] args) {
+        EventQueue.invokeLater(() -> {
+            try {
+                LogIn frame = new LogIn();
+                frame.setVisible(true);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 }
